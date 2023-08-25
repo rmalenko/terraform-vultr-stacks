@@ -1,0 +1,10 @@
+---
+- name: Ensure {{ systemd_service_name }} systemd service
+  tags:
+    - service
+    - systemd_service
+    - systemd
+  block:
+    - name: Ensure {{ systemd_service_name }} systemd service
+      import_tasks: systemd_service.yml
+      # ansible.builtin.import_tasks: systemd_service.yml

@@ -1,0 +1,8 @@
+---
+- name: Ensure {{ systemd_journald_service_name }} systemd service
+  # ansible.builtin.include_role:
+  include_role:
+    name: systemd_service
+  vars:
+    systemd_service_name: "{{ systemd_journald_service_name }}"
+    systemd_service_restart_on: "{{ systemd_journald_conf.changed }}"

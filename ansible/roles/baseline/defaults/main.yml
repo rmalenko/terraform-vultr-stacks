@@ -1,0 +1,70 @@
+project_name: ""
+cf_api_token: ""
+docker_release_branch: stable
+# docker_compose_version: 1.27.4
+docker_install_compose: true
+docker_compose_version: "v2.11.1"
+docker_compose_arch: "{{ ansible_architecture }}"
+docker_compose_url: "https://github.com/docker/compose/releases/download/v{{ docker_compose_version }}/docker-compose-linux-{{ docker_compose_arch }}"
+docker_compose_path: /usr/local/bin/docker-compose
+docker_metrics_addr: 0.0.0.0
+loki_addr: 127.0.0.1
+loki_batch_size: "400"
+loki_retention_period: 2016h
+docker_repo_url: https://download.docker.com/linux
+docker_apt_gpg_key: "{{ docker_repo_url }}/{{ ansible_distribution | lower }}/gpg"
+docker_apt_ignore_key_error: true
+docker_apt_release_channel: stable
+docker_apt_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}"
+docker_apt_repository: "deb [arch={{ docker_apt_arch }}] {{ docker_repo_url }}/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} {{ docker_apt_release_channel }}"
+docker_edition: 'ce'
+docker_packages:
+  - "docker-{{ docker_edition }}"
+  - "docker-{{ docker_edition }}-cli"
+  - "docker-{{ docker_edition }}-rootless-extras"
+  - "containerd.io"
+
+docker_service_manage: true
+docker_service_state: started
+docker_service_enabled: true
+docker_restart_handler_state: restarted
+docker_packages_state: present
+# A list of users who will be added to the docker group.
+docker_users: []
+
+docker_daemon_options:
+  live-restore: true
+  storage-driver: overlay2
+  experimental: true
+  metrics-addr: "{{ docker_metrics_addr }}:9323"
+  debug: false
+  # log-driver: loki
+  log-driver: json-file # use for parse log's files
+  log-opts:
+    # loki-url: "https://{{ loki_username }}:{{ loki_password }}@{{ loki_address }}/loki/api/v1/push"
+    # loki-external-labels: "job=dockerlogs,container_name={{ '{{' }}.Name{{ '}}' }}"
+    # # loki-external-labels: "job=dockerlogs,container_name={{'{{'}}.Name{{'}}'}},host={{inventory_hostname}}"
+    # loki-batch-size: '400'
+    # loki-retries: '5'
+    # loki-timeout: '10s'
+    # max-size: '10m'
+    # max-file: '5'
+    # no-file: 'false'
+    # keep-file: 'true'
+    # json-file # use for parse log's files
+    cache-disabled: "true"
+    cache-max-file: "5"
+    cache-max-size: "20m"
+    cache-compress: "true"
+    # labels: "tag={{'{{'}}.ImageName{{'}}'}}|{{'{{'}}.Name{{'}}'}}|{{'{{'}}.ImageFullID{{'}}'}}|{{'{{'}}.FullID{{'}}'}}"
+    labels: tag={{ '{{' }}.ImageName{{ '}}' }}|{{ '{{' }}.Name{{ '}}' }}|{{ '{{' }}.ImageFullID{{ '}}' }}|{{ '{{' }}.FullID{{ '}}' }}
+    max-file: "5"
+    max-size: "20m"
+
+# _docker_loki_alias: loki:latest
+docker_plugins:
+  - alias: loki
+    source: grafana/loki-docker-driver
+    version: latest
+    # version: 2.7.0
+    state: absent

@@ -1,0 +1,300 @@
+---
+- name: Ensure old versions of Docker are not installed
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: absent
+  loop:
+    - docker-engine
+    - docker.io
+    - containerd
+    - runc
+
+# - name: Install apt-related packages
+#   apt:
+#     name: "{{ item }}"
+#     state: present
+#     update_cache: true
+#   loop:
+#     - apt-transport-https
+#     - ca-certificates
+#     - curl
+#     - software-properties-common
+#     - gnupg
+#     - python3-pip
+
+- name: Install docker python package
+  ansible.builtin.pip:
+    name: docker
+
+- name: Add Docker apt key.
+  ansible.builtin.get_url:
+    url: "{{ docker_apt_gpg_key }}"
+    dest: /etc/apt/trusted.gpg.d/docker.asc
+    mode: '0644'
+    force: true
+  register: add_repository_key
+  ignore_errors: "{{ docker_apt_ignore_key_error }}"
+
+- name: Add Docker repository.
+  apt_repository:
+    repo: "{{ docker_apt_repository }}"
+    state: present
+    update_cache: true
+
+- name: Install Docker packages
+  package:
+    name: "{{ docker_packages }}"
+    state: "{{ docker_packages_state }}"
+  notify: Restart Docker
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Install Docker bash completion
+  get_url:
+    url: https://raw.githubusercontent.com/docker/docker-{{ docker_edition }}/master/components/cli/contrib/completion/bash/docker
+    dest: /etc/bash_completion.d/docker
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Check current docker-compose version
+  command: "{{ docker_compose_path }} --version"
+  register: docker_compose_vsn
+  check_mode: false
+  changed_when: false
+  failed_when: false
+
+- name: Set version of Docker Compose
+  set_fact:
+    cacheable: true
+    docker_compose_current_version: "{{ docker_compose_vsn.stdout | regex_search('(\\d+(\\.\\d+)+)') }}"
+  when: >
+    docker_compose_vsn.stdout is defined
+    and (docker_compose_vsn.stdout | length > 0)
+
+- name: Delete existing docker-compose version if it's different
+  file:
+    path: "{{ docker_compose_path }}"
+    state: absent
+  when: >
+    docker_compose_current_version is defined
+    and (docker_compose_version | regex_replace('v', '')) not in docker_compose_current_version
+
+- name: Install Docker Compose (if configured).
+  get_url:
+    url: "{{ docker_compose_url }}"
+    dest: "{{ docker_compose_path }}"
+    mode: "0755"
+  when: >
+    (docker_compose_current_version is not defined)
+    or (docker_compose_current_version | length == 0)
+    or (docker_compose_current_version is version((docker_compose_version | regex_replace('v', '')), '<'))
+
+- name: Ensure /etc/docker/ directory exists
+  file:
+    path: /etc/docker
+    state: directory
+    mode: "0755"
+  when: docker_daemon_options.keys() | length > 0
+
+- name: Ensure Docker is started and enabled at boot
+  service:
+    name: docker
+    state: "{{ docker_service_state }}"
+    enabled: "{{ docker_service_enabled }}"
+  ignore_errors: "{{ ansible_check_mode }}"
+  when: docker_service_manage | bool
+
+- name: Check status of docker plugins
+  docker_plugins:
+    state: test
+    plugin_source: "{{ item.source }}"
+    plugin_version: "{{ item.version }}"
+    plugin_alias: "{{ item.alias }}"
+  loop: "{{ docker_plugins }}"
+  loop_control:
+    label: "{{ item.alias }}"
+  register: _plugin_state
+
+#  docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
+
+- name: Install docker plugins
+  docker_plugins:
+    state: present
+    plugin_source: "{{ item.source }}"
+    plugin_version: "{{ item.version }}"
+    plugin_alias: "{{ item.alias }}"
+  loop: "{{ docker_plugins }}"
+  loop_control:
+    label: "{{ item.alias }}"
+  notify:
+    # - Configure Docker daemon options
+    - Restart Docker
+  when:
+    - not _plugin_state.results[0].installed or
+      not _plugin_state.results[0].equal_versions
+
+- name: Configure Docker daemon options
+  copy:
+    content: "{{ docker_daemon_options | to_nice_json }}"
+    dest: /etc/docker/daemon.json
+    mode: "0644"
+  when: docker_daemon_options.keys() | length > 0
+  notify: Restart Docker
+
+- name: Ensure handlers are notified now to avoid firewall conflicts.
+  meta: flush_handlers
+
+- name: Get docker group info using getent
+  getent:
+    database: group
+    key: docker
+    split: ':'
+  when: docker_users | length > 0
+
+- name: Check if there are any users to add to the docker group
+  set_fact:
+    at_least_one_user_to_modify: true
+  when:
+    - docker_users | length > 0
+    - item not in ansible_facts.getent_group["docker"][2]
+  with_items: "{{ docker_users }}"
+
+- name: Ensure docker users are added to the docker group
+  user:
+    name: "{{ item }}"
+    groups: docker
+    append: true
+  with_items: "{{ docker_users }}"
+
+# - name: Create docker client config directory
+#   file:
+#     path: /root/.docker
+#     state: directory
+#     mode: "0755"
+
+# - name: Login to DigitalSilk registry
+#   copy:
+#     src: config.json
+#     dest: /root/.docker/config.json
+#     owner: root
+#     group: root
+#     mode: "0644"
+
+# - name: Send script to enable Docker API
+#   copy:
+#     src: generate-docker-certs.sh
+#     dest: /opt/generate-docker-certs.sh
+#     mode: "0755"
+
+# - name: Generate Docker certificates and enable API
+#   command: /opt/generate-docker-certs.sh "{{ inventory_hostname }}" "{{ ansible_host }}"
+
+# - name: Fetch Docker client certificates
+#   fetch:
+#     src: "/root/.docker/{{ item }}"
+#     dest: /tmp/
+#     flat: true
+#   loop:
+#     - ca.pem
+#     - cert.pem
+#     - key.pem
+
+# - name: Register Drone CI secrets
+#   command: drone secret add "projects/{{ project_name }}" --name "{{ item.secret_name }}" --data "@/tmp/{{ item.filename }}"
+#   loop:
+#     - { secret_name: docker_ca_prod, filename: ca.pem }
+#     - { secret_name: docker_cert_prod, filename: cert.pem }
+#     - { secret_name: docker_key_prod, filename: key.pem }
+#   delegate_to: localhost
+#   vars:
+#     ansible_become: false
+
+# - name: Register Drone CI Docker host secret
+#   command: drone secret add "projects/{{ project_name }}" --name "docker_host_prod" --data "{{ ansible_host }}:2376"
+#   delegate_to: localhost
+#   vars:
+#     ansible_become: false
+
+# - name: Local cleanup
+#   file:
+#     path: "/tmp/{{ item }}"
+#     state: absent
+#   loop:
+#     - ca.pem
+#     - cert.pem
+#     - key.pem
+#   delegate_to: localhost
+#   run_once: true
+#   register: cleanupresult
+#   vars:
+#     ansible_become: false
+
+# - name: Create directory structure
+#   file:
+#     path: "{{ item }}"
+#     mode: "0664"
+#     state: directory
+#   loop:
+#     - /opt/website
+#     - /opt/website/traefik
+#     - /etc/promtail/
+
+# - name: Deliver website setup recipe
+#   copy:
+#     src: "{{ item.filename }}"
+#     dest: "{{ item.dest }}"
+#     mode: "0644"
+#   loop:
+#     - { filename: docker-compose.yml, dest: /opt/website/ }
+#     - { filename: traefik.yml, dest: /opt/website/traefik/ }
+
+# - name: Configure Promtail
+#   template:
+#     src: promtail-config.yaml.j2
+#     dest: /etc/promtail/promtail-config.yaml
+#     owner: root
+#     group: root
+#     mode: "0644"
+#   # notify: Restart Promtail # doesn't need to restart becase promtail will install later from dockercompose file
+
+# - name: Create certificates storage
+#   file:
+#     path: /opt/website/traefik/certificates.json
+#     state: touch
+#     mode: "0600"
+
+# - name: Create environment file
+#   template:
+#     src: env.j2
+#     dest: /opt/website/.env
+#     mode: "0644"
+
+# - name: Add weekly docker cleanup
+#   copy:
+#     src: docker-cleanup
+#     dest: /etc/cron.d/
+#     owner: root
+#     group: root
+#     mode: "0644"
+
+# - name: Create a cron job plugins
+#   template:
+#     src: plugin.cron.j2
+#     dest: "/etc/cron.d/plugin-updates-{{ project_name }}"
+#     owner: root
+#     group: root
+#     mode: "0644"
+
+# - name: Create a cron job metrics
+#   template:
+#     src: metrics.cron.j2
+#     dest: "/etc/cron.d/custom-metrics"
+#     owner: root
+#     group: root
+#     mode: 0644
+
+# - name: Run website stack dockercompose Traefik, node-exporter, promtail
+#   command: docker-compose -f /opt/website/docker-compose.yml up -d
+
+- name: Reset ssh connection to apply user changes.
+  meta: reset_connection

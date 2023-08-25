@@ -1,0 +1,18 @@
+{
+  "live-restore": true,
+  "storage-driver": "overlay2",
+  "experimental": true,
+  "metrics-addr": "{{ docker_metrics_addr }}:9323",
+  "debug": true,
+  "log-driver": "loki",
+  "log-opts": {
+    "loki-url": "https://{{ loki_username }}:{{ loki_password }}@{{ loki_address }}/api/v1/push",
+    "tag": "{{.Name}}",
+    "loki-external-labels": "job=dockerlogs,container_name={{.Name}}",
+    "loki-batch-size": "500",
+    "loki-retries": "5",
+    "loki-timeout": "30",
+    "max-size": "25m",
+    "max-file": "4",
+  }
+}
