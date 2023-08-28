@@ -24,7 +24,8 @@ variable "instance" {
     ddos_protection  = bool,
     activation_email = bool,
     cloud_config     = string,
-    tz               = string
+    tz               = string,
+    # ansible_playbook = string
   }))
 }
 

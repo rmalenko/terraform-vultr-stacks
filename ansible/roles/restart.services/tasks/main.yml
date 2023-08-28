@@ -1,0 +1,11 @@
+---
+- name: Populate service facts
+  ansible.builtin.service_facts:
+
+- name: Restart alertmanager, promtail and node_exporter
+  ansible.builtin.service:
+    name: "{{ item }}"
+    enabled: true
+    state: restarted
+  when: "item in services"
+  with_items: '{{ restart_services }}'

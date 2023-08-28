@@ -5,7 +5,7 @@ module "vultr" {
   firewall_name = "External HTTP, SSH"
   vpc_name      = "A beautiful name of my VPC"
   region        = var.region_frankfurt_de
-  # Instanse
+  # List of server configurations
   instance = {
     app-server = {
       instance_tags    = ["go", "app"]
@@ -20,8 +20,8 @@ module "vultr" {
       ddos_protection  = false
       activation_email = false
       ssh_key_name     = ["rostyslav"]
-      cloud_config     = "cloud_config_general.yaml"
-      tz               = "Europe/Berlin"
+      cloud_config     = "cloud_config_app_server.yaml"
+      tz               = "Europe/Kiev"
     },
     db-server = {
       instance_tags    = ["go", "db"]
@@ -36,9 +36,11 @@ module "vultr" {
       ddos_protection  = false
       activation_email = false
       ssh_key_name     = ["rostyslav"]
-      cloud_config     = "cloud_config_general.yaml"
+      cloud_config     = "cloud_config_db_server.yaml"
       tz               = "Europe/Berlin"
     }
   }
 }
+# Man. DateTime::TimeZone::Catalog.3pm.gz
+# https://manpages.ubuntu.com/manpages/focal/man3/DateTime::TimeZone::Catalog.3pm.html¸
 

@@ -5,7 +5,7 @@
 
 - name: Update repositories cache and package
   ansible.builtin.apt:
-    cache_valid_time: 7200
+    cache_valid_time: 86400 #One day
     update_cache: true
     upgrade: true
     state: present

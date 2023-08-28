@@ -18,20 +18,22 @@ locals {
 }
 
 resource "local_file" "ansible_inventory" {
+  for_each = var.instance
   content = templatefile("${path.module}/templates/ansible_inventory.tpl",
     {
       instancesips = local.ips
     }
   )
-  filename = "./ansible/hosts.yaml"
+  file_permission = "0644"
+  filename        = "./ansible/ansible_inventory.yaml"
+  depends_on      = [data.vultr_instance.instance_ip]
 
   provisioner "local-exec" {
-    command = "export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES && cd ./ansible && ansible-playbook -i ./hosts.yaml ./playbook.yml"
+    command = "export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES && sleep 90 && cd ./ansible && ansible-playbook -i ./ansible_inventory.yaml ./${each.key}.yaml --limit '${each.key}.${var.domain}'"
   }
-  depends_on = [data.vultr_instance.instance_ip]
 }
 
-# It's actually for MacOS
+# That's actually for MacOS
 # export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 # or 
 # adding below to ~/.bash_profile works.

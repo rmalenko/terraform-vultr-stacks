@@ -1,0 +1,32 @@
+---
+# - name: Log into registry and force re-authorization
+#   docker_login:
+#     registry_url: "{{ docker_registry_url }}"
+#     username: "{{ docker_registry_username }}"
+#     password: "{{ docker_registry_password }}"
+
+# - name: Pull Docker image
+#   docker_image:
+#     name: "{{ docker_image_name }}"
+#     tag: "{{ docker_image_tag }}"
+#     source: pull
+
+# - name: Log out of the Docker registry
+#   docker_login:
+#     registry_url: "{{ docker_registry_url }}"
+#     state: absent
+
+- name: Deploy Docker container
+  community.docker.docker_container:
+    name: "{{ docker_container_name }}"
+    image: "{{ docker_image_name }}:{{ docker_image_tag }}"
+    state: started
+    recreate: true
+    restart_policy: always
+    env: "{{ docker_container_env | default({}) }}"
+    ports: "{{ docker_container_published_ports | default([]) }}"
+    volumes: "{{ docker_container_volumes | default([]) }}"
+
+- name: Prune unnecessary Docker images
+  docker_prune:
+    images: true

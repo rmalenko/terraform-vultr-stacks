@@ -6,10 +6,19 @@ If you have already done that, you may skip these steps
 - create and record the API key
 - and insert the key into `terraform.tfvars` `VULTR_API_KEY = "IO....Q"`
 
-It the file `01-main.tf`
-Add, Change the number of servers you need, or remove one server. Look for `# Instanse`.
+**Variables**
+It the file `01-main.tf` add or, change the number of servers you need, or remove one server. Look for `# Instanse`.
+
+These keys are used for server and host names and Ansible playbook names.
+For example:
+- app-server + var.domain = app-server.jazzfest.link
+- app-servr = app-server.yaml ansible playbooks name. So, each server uses its playbook, which allows for preparing specific configurations for each server. It means you must create a playbook named as `${each.key}.yaml` in the folder `./ansible`
+
+![Vultr](./docs/servers_key.png)
+
 All variables in file `variables.tf`. I hope they are described itself.
 Also, don't forget to change variable `domain = "jazzfest.link"` to your domain name.
+
 
 Then run:
 - `terraform init`
