@@ -22,6 +22,7 @@ module "vultr" {
       ssh_key_name     = ["rostyslav"]
       cloud_config     = "cloud_config_app_server.yaml"
       tz               = "Europe/Kiev"
+      # ansible_playbook = "app-server.yml"
     },
     db-server = {
       instance_tags    = ["go", "db"]
@@ -38,6 +39,7 @@ module "vultr" {
       ssh_key_name     = ["rostyslav"]
       cloud_config     = "cloud_config_db_server.yaml"
       tz               = "Europe/Berlin"
+      # ansible_playbook = "db-server.yml"
     }
   }
 }
