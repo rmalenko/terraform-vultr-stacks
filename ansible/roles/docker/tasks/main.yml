@@ -1,0 +1,17 @@
+---
+# tasks file for docker
+
+- name: 'CentOS'
+  import_tasks: install_CentOS.yml
+  when: ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_version']|int <= 7
+
+- name: 'Debian'
+  import_tasks: install_Debian.yml
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: 'Fedora'
+  import_tasks: install_Fedora.yml
+  when: ansible_facts['distribution'] == "Fedora" and ansible_facts['distribution_version']|int == 30
+
+- import_tasks: configure.yml
+  when: ansible_facts['distribution'] != 'RedHat'

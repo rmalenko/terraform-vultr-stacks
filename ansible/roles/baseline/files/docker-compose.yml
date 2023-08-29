@@ -1,0 +1,68 @@
+version: "2.4"
+
+services:
+  traefik:
+    image: traefik:v2.9.9
+    container_name: traefik
+    hostname: traefik
+    restart: always
+    labels:
+      - "traefik.enable=false" # <== Enable traefik on itself to view dashboard and assign subdomain to view it
+      - "traefik.http.routers.api.service=api@internal" # <== Enabling the api to be a service to access
+      - "traefik.http.routers.whoami.rule=Host(`localhost`)"
+    environment:
+      - CF_DNS_API_TOKEN
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8082:8082"
+      # web UI - available via port-forwarding only
+      - "127.0.0.1:8088:8088"
+    volumes:
+      - "/opt/website/traefik:/etc/traefik"
+      - "/run/containerd/containerd.sock:/run/containerd/containerd.sock:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - frontend
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    privileged: true
+    command:
+      - '--collector.processes'
+      - '--collector.textfile'
+      - '--collector.textfile.directory=/custom-metrics'
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+    network_mode: host # If we want to start container for host monitoring
+    pid: host
+    restart: unless-stopped
+    # In network mode it wont't need and will be failed to add interface
+    #networks:
+    #  - frontend
+    volumes:
+      # - "/:/host:ro,rslave"
+      - /tmp/prom-metrics:/custom-metrics
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    volumes:
+      - /etc/promtail/:/etc/promtail/
+      - /var/log:/var-log:ro
+      - /var/lib/docker/containers:/containers-log:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: -config.file=/etc/promtail/promtail-config.yaml
+    networks:
+      - frontend
+
+networks:
+  frontend:
+    name: frontend
+    driver: bridge

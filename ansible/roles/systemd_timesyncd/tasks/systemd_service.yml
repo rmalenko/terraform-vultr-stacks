@@ -1,0 +1,8 @@
+---
+- name: Ensure {{ systemd_timesyncd_service_name }} systemd service
+  # ansible.builtin.include_role:
+  include_role:
+    name: systemd_service
+  vars:
+    systemd_service_name: "{{ systemd_timesyncd_service_name }}"
+    systemd_service_restart_on: "{{ systemd_timesyncd_conf.changed }}"

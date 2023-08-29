@@ -1,0 +1,11 @@
+---
+systemd_timesyncd_service_name: systemd-timesyncd
+systemd_timesyncd_configuration_file: /etc/systemd/timesyncd.conf
+systemd_timesyncd_ntp: [0.us.pool.ntp.org 1.us.pool.ntp.org 2.us.pool.ntp.org 3.us.pool.ntp.org]
+systemd_timesyncd_fallbackntp: [0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org]
+systemd_timesyncd_rootdistancemaxsec: 5
+systemd_timesyncd_pollintervalminsec: 32
+systemd_timesyncd_pollintervalmaxsec: 2048
+systemd_timesyncd_package_name: systemd-timesyncd
+systemd_timesyncd_package_version: ""
+systemd_timesyncd_package_state: present

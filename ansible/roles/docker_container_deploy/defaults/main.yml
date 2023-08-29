@@ -1,0 +1,34 @@
+---
+
+# The registry URL.
+docker_registry_url: "https://index.docker.io/v1/"
+
+# The username for the registry account. REQUIRED
+docker_registry_username: ""
+
+# The plaintext password for the registry account. REQUIRED
+docker_registry_password: ""
+
+# Image name. Name format will be one of: name, repository/name, registry_server:port/name.
+# When pushing or pulling an image the name can optionally include the tag by appending ':tag_name'.
+# Note that image IDs (hashes) are not supported.
+# REQUIRED
+docker_image_name: ""
+
+# Used to select an image when pulling.
+docker_image_tag: "latest"
+
+# Assign a name to a new container or match an existing container. REQUIRED
+docker_container_name: ""
+
+# Dictionary of key,value pairs.
+# Values which might be parsed as numbers, booleans or other types by the YAML parser must be quoted (e.g. "true") in order to avoid data loss.
+docker_container_env: {}
+
+# List of ports to publish from the container to the host.
+# Use docker CLI syntax: 8000, 9000:8000, or 0.0.0.0:9000:8000
+docker_container_published_ports: []
+
+# List of volumes to mount within the container.
+# Use docker CLI-style syntax: /host:/container[:mode]
+docker_container_volumes: []

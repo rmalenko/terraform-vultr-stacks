@@ -1,0 +1,26 @@
+---
+- name: Populate service facts
+  ansible.builtin.service_facts:
+
+- name: Restart Docker
+  ansible.builtin.service:
+    name: docker
+    enabled: true
+    state: "{{ docker_restart_handler_state }}"
+  ignore_errors: "{{ ansible_check_mode }}"
+  when: docker_service_manage | bool
+
+- name: Restart Promtail
+  ansible.builtin.service:
+    name: promtail
+    enabled: true
+    state: restarted
+  # ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Configure Docker daemon options
+  copy:
+    content: "{{ docker_daemon_options | to_nice_json }}"
+    dest: /etc/docker/daemon.json
+    mode: "0644"
+  when: docker_daemon_options.keys() | length > 0
+  # notify: Restart Docker

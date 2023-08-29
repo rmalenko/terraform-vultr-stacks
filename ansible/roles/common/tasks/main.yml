@@ -1,0 +1,60 @@
+---
+- name: "Set a hostname {{ inventory_hostname }}"
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Update repositories cache and package
+  ansible.builtin.apt:
+    cache_valid_time: 86400 #One day
+    update_cache: true
+    upgrade: true
+    state: present
+    autoclean: true
+    autoremove: true
+    dpkg_options: 'force-confold,force-confdef'
+
+- name: Install apt-related packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: false
+  loop:
+    - git
+    - tzdata
+    - rsync
+    - less
+    - wget
+    - logtail
+    - screen
+    - pigz
+    - ncdu
+    - net-tools
+    - zip
+    - unzip
+    - sysfsutils
+    - htop
+    - mc
+    - python3-pip
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - software-properties-common
+    - gnupg
+
+- name: Create a directory for Midnight Commander menu
+  ansible.builtin.file:
+    path: '{{ item.src }}'
+    state: directory
+    mode: '0755'
+  loop:
+    - { src: ~/.config/mc }
+
+- name: Copy Bashrc and aliases and Midnight Commander menu
+  copy:
+    src: "{{ item.filename }}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+  loop:
+    - { filename: .bash_aliases, dest: /root/ }
+    - { filename: .bashrc, dest: /root/ }
+    - { filename: menu-midnight, dest: ~/.config/mc/menu }

@@ -1,0 +1,37 @@
+#cloud-config
+package_update: false
+package_upgrade: false
+timezone: Europe/Berlin # https://manpages.ubuntu.com/manpages/trusty/man3/DateTime::TimeZone::Catalog.3pm.html
+
+# packages:
+#   - nginx
+#   - git
+#   - python3-pip
+#   - mc
+#   - htop
+#   - unzip
+#   - ansible
+# users:
+#   - name: ansible
+#     homedir: /home/ansible
+#     shell: /bin/bash
+#     sudo: "ALL=(ALL) NOPASSWD:ALL"
+#     ssh_authorized_keys:
+#       - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOy3jk/HSjmpxw5ummcFfXop3S4Fg5E7GEYPtfXpHOO8 rmalenko@gmail.com"
+
+# ansible:
+#   install_method: pip
+#   package_name: ansible
+#   run_user: ansible
+#   pull:
+#     url: "https://github.com/holmanb/vmboot.git"
+#     playbook_name: ubuntu.yml
+
+# write_files:
+#   - owner: www-data:www-data
+#     path: /var/www/html/index.html
+#     content: "<h1>Server Provisioned by Terraform & Cloud-Init</h1>"
+
+# runcmd:
+#   - ufw allow http
+

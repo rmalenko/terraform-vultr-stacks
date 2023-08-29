@@ -1,0 +1,29 @@
+# Ansible Inventory
+---
+hosting:
+  hosts:
+  %{~ for inst in instancesips  ~}
+    ${inst.hostname}:
+      ansible_port: 22
+      ansible_host: ${inst.external_ip}
+  %{~ endfor ~}
+
+
+${yamlencode({
+  "backends": [for inst in instancesips : "${inst.hostname}"],
+})}
+
+
+${yamlencode(
+  {
+    hosting = {
+      hosts = {
+        for inst in instancesips :
+          inst.hostname => {
+            ansible_port = 22
+            ansible_host = inst.external_ip
+          }
+        }
+      }
+    }
+)}

@@ -1,0 +1,57 @@
+log:
+  level: INFO
+
+## CLI commands to configure Traefik and tell it how to work!
+## API Settings - https://docs.traefik.io/operations/api/, endpoints - https://docs.traefik.io/operations/api/#endpoints
+api:
+  dashboard: true # <== Enabling the dashboard to view services, middlewares, routers, etc
+  insecure: true # <== Enabling insecure api, NOT RECOMMENDED FOR PRODUCTION
+  debug: false # <== Enabling additional endpoints for debugging and profiling
+
+providers:
+  docker:
+    exposedByDefault: false # only expose enabled containers
+    network: frontend
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: "devops@digitalsilk.com"
+      storage: /etc/traefik/certificates.json
+      httpChallenge:
+        entryPoint: web
+
+## Entrypoints Settings - https://docs.traefik.io/routing/entrypoints/#configuration
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    address: ":443"
+    forwardedHeaders:
+      trustedIPs:
+      - "127.0.0.1/32"
+      - "192.168.0.0/16"
+      - "172.0.0.0/8"
+    http:
+      tls:
+        certResolver: letsencrypt
+  metrics:
+    address: ":8082"
+
+metrics:
+  prometheus:
+    entryPoint: metrics
+    addEntryPointsLabels: true
+    addServicesLabels: true
+    buckets:
+      - 0.1
+      - 0.3
+      - 1.2
+      - 5.0
+      - 10.0

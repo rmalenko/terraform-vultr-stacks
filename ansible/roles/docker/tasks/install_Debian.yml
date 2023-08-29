@@ -1,0 +1,45 @@
+---
+- name: Uninstall old versions
+  apt:
+    name: >-
+        docker, docker-engine, docker.io,
+        containerd, runc
+    state: absent
+  become: yes
+  when: not snap_version
+
+- name: Add Docker apt signing key
+  apt_key:
+    url: "{{ item }}"
+    state: present
+  with_items:
+    - "https://download.docker.com/linux/{{ os_distri }}/gpg"
+  become: yes
+  when: not snap_version
+
+- name: Setup Docker apt repository on Debian
+  apt_repository:
+    repo: "deb https://download.docker.com/linux/{{ os_distri }} {{ os_distri_release }} stable"
+    state: present
+  become: yes
+  when: not snap_version
+
+- name: Install docker pre-reqs
+  apt:
+    update_cache: yes
+    name: "{{ lookup('vars', os_distri + '_prereq_packages') }}"
+    state: present
+  become: yes
+  when: not snap_version
+
+- name: Install Docker-CE
+  apt:
+    update_cache: yes
+    name: "{{ lookup('vars', os_distri + '_docker_packages') }}"
+    state: present
+  become: yes
+  when: not snap_version
+
+# - name: snap version
+#   import_tasks: snap_install.yml
+#   when: snap_version
