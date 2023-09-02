@@ -33,3 +33,7 @@ variable "domain" {
   type        = string
   description = "Main public domain name"
 }
+
+variable "vultr_apikey" {
+  type = string
+}
