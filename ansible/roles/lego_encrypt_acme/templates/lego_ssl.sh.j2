@@ -1,0 +1,17 @@
+#!/bin/sh
+
+{{ ansible_managed | comment }}
+
+export VULTR_API_KEY={{ apikey }}
+export VULTR_HTTP_TIMEOUT=300
+export VULTR_POLLING_INTERVAL=120
+export VULTR_PROPAGATION_TIMEOUT=600
+export VULTR_TTL=300
+lego --dns vultr \
+   --domains *.{{ domain }} \
+   --domains {{ domain }} \
+   --email {{ email }} \
+   --path="/etc/letsencrypt/{{ domain }}" \
+   --http.port 81 \
+   --tls.port 82 \
+   --accept-tos {{ '${1}' }}

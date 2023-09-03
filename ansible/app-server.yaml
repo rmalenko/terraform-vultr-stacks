@@ -13,7 +13,9 @@
     - role: systemd_journald
     - role: systemd_timesyncd
     - role: node_exporter
-    - role: geerlingguy.certbot
+    - role: lego_encrypt_acme
+    - role: ansible-systemd-timers
+    # - role: geerlingguy.certbot
 
   tasks:
     - name: Install NGINX
@@ -135,6 +137,8 @@
                     keepalive_timeout: 75s
                     server_name:
                       - "{{ domain_name }}"
+                      - "www.{{ domain_name }}"
+                      - "{{ domain_name_nginx }}"
                     listen:
                       - address: 0.0.0.0
                         port: 80
@@ -172,6 +176,8 @@
                     keepalive_timeout: 75s
                     server_name:
                       - "{{ domain_name }}"
+                      - "www.{{ domain_name }}"
+                      - "{{ domain_name_nginx }}"
                     listen:
                       - address: 0.0.0.0
                         port: 443
@@ -204,9 +210,9 @@
                   autoindex:
                     enable: false
                   ssl:
-                    certificate: /etc/letsencrypt/live/{{ domain_name }}/fullchain.pem
-                    certificate_key: /etc/letsencrypt/live/{{ domain_name }}/privkey.pem
-                    trusted_certificate: /etc/letsencrypt/live/{{ domain_name }}/cert.pem
+                    certificate: /etc/letsencrypt/{{ domain_name }}/certificates/_.{{ domain_name }}.crt
+                    certificate_key: /etc/letsencrypt/{{ domain_name }}/certificates/_.{{ domain_name }}.key
+                    # trusted_certificate: /etc/letsencrypt/{{ domain_name }}/certificates/cert.pem
                     ciphers:
                       - ECDHE-ECDSA-AES128-GCM-SHA256
                       - ECDHE-RSA-AES128-GCM-SHA256
@@ -278,6 +284,19 @@
                             value: $remote_addr
 
   vars:
+    domain_name: "{{ domain_name }}" # The primary domain name to obtain wildcard letsencrypt SSL and for paths and certificates name.
+    api_key: "{{ api_key }}"
+    email: "{{ email }}"
+    lego_v: "v4.14.0"
+
+    timers: # https://wiki.archlinux.org/title/systemd/Timers
+      renewal_letsencrypt:
+        timer_command: "{{ script_path }} renew && nginx -s reload"
+        timer_user: root
+        timer_OnCalendar: "*-*-* 02:37:00 EST"
+        # timer_persistent: true
+        timer_AccuracySec: 2h
+
     docker_compose_version: "2.20.3"
     systemd_journald_systemmaxuse: "2G"
     node_exporter_version: 1.6.1 # https://github.com/prometheus/node_exporter/releases
@@ -289,16 +308,16 @@
           ignored-mount-points: "^/(sys|proc|dev)($|/)"
           ignored-fs-types: "^(sys|proc|auto)fs$"
 
-    certbot_admin_email: rmalenko@gmail.com
-    certbot_auto_renew: true
-    certbot_auto_renew_hour: 2
-    certbot_auto_renew_minute: 16
-    certbot_auto_renew_options: --quiet
-    certbot_create_if_missing: true
-    certbot_create_method: standalone
-    certbot_install_method: snap
-    certbot_testmode: true # Enable test mode to only run a test request without actually creating certificates.
-    certbot_create_standalone_stop_services:
-      - nginx
-    certbot_certs:
-      - domains: "{{ domain_name }}"
+    # certbot_admin_email: rmalenko@gmail.com
+    # certbot_auto_renew: true
+    # certbot_auto_renew_hour: 2
+    # certbot_auto_renew_minute: 16
+    # certbot_auto_renew_options: --quiet
+    # certbot_create_if_missing: true
+    # certbot_create_method: standalone
+    # certbot_install_method: snap
+    # certbot_testmode: true # Enable test mode to only run a test request without actually creating certificates.
+    # certbot_create_standalone_stop_services:
+    #   - nginx
+    # certbot_certs:
+    #   - domains: "{{ domain_name }}"

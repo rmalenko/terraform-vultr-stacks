@@ -1,15 +1,9 @@
-[submodule "ansible-role-nginx"]
-	path = ansible-role-nginx
-	url = https://github.com/nginxinc/ansible-role-nginx.git
-[submodule "ansible/roles/ansible-role-nginx"]
-	path = ansible/roles/ansible-role-nginx
-	url = https://github.com/nginxinc/ansible-role-nginx.git
-[submodule "ansible/roles/ansible-role-nginx-config"]
-	path = ansible/roles/ansible-role-nginx-config
+[submodule "ansible/roles/nginxinc.nginx_config"]
+	path = ansible/roles/nginxinc.nginx_config
 	url = https://github.com/nginxinc/ansible-role-nginx-config.git
-[submodule "ansible/roles/ansible-role-certbot"]
-	path = ansible/roles/ansible-role-certbot
-	url = git@github.com:geerlingguy/ansible-role-certbot.git
-[submodule "ansible/roles/postgresql"]
-	path = ansible/roles/postgresql
+[submodule "ansible/roles/nginxinc.nginx"]
+	path = ansible/roles/nginxinc.nginx
+	url = https://github.com/nginxinc/ansible-role-nginx.git
+[submodule "ansible/roles/geerlingguy.postgresql"]
+	path = ansible/roles/geerlingguy.postgresql
 	url = git@github.com:ANXS/postgresql.git

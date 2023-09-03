@@ -9,19 +9,24 @@ If you have already done that, you may skip these steps
 ## Variables
 It the file `01-main.tf` add or, change the number of servers you need, or remove one server. Look for `# Instanse`.
 
-### Domain and DNS
+### Domain and SSL certificates
 These keys are used for server and host names and Ansible playbook names.
+
 *For example:*
 - `app-server` + `var.domain` = `app-server.jazzfest.link`
 
 In this case, `app-server` is the first key `[0]`, and the public IP of this instance will be used as the primary server in this infrastructure. This server could be a load balancer or just for all wanted applications.
+
 Important:
 
 - IP of the first server used for `@` and `www` DNS records.
-- SSL certificate (Letsencrypt) will be generated for domains: `jazzfest.link`, `www.jazzfest.link`, `app-server.jazzfest.link`.
+- SSL certificate (Letsencrypt) will be issued for wildcard domains: `jazzfest.link`, `*.jazzfest.link` using [Lego](https://github.com/go-acme/lego) - Let's Encrypt client and ACME library. Follow the link for more information. We assume we use Vultr DNS. And our NS servers were appropriately configured.
 
 ### Ansible configuration
 - app-servr = app-server.yaml ansible playbooks name. So, each server uses its playbook, which allows for preparing specific configurations for each server. It means you must create a playbook named as `${each.key}.yaml` in the folder `./ansible`
+
+
+`sleep 180` in `06-templates.tf` may not be enough to get a letsencrypt certificate because DNS isn't propagated yet.
 
 ![Vultr](./docs/servers_key.png)
 
