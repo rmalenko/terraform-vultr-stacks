@@ -12,7 +12,7 @@ module "vultr" {
       instance_tags    = ["go", "app"]
       ssh_key_name     = ["rostyslav"]
       plan             = var.plan_5_usd_vc2-1c-1gb
-      os_id            = var.os_id_ubuntu_20_04_lts
+      os_id            = var.os_id_ubuntu_22_04_lts
       enable_ipv6      = true
       backups          = "enabled"
       backups_schedule = "monthly"
@@ -27,7 +27,7 @@ module "vultr" {
     #   instance_tags    = ["go", "db"]
     #   ssh_key_name     = ["rostyslav"]
     #   plan             = var.plan_5_usd_vc2-1c-1gb
-    #   os_id            = var.os_id_ubuntu_20_04_lts
+    #   os_id            = var.os_id_ubuntu_22_04_lts
     #   enable_ipv6      = false
     #   backups          = "enabled"
     #   backups_schedule = "monthly"

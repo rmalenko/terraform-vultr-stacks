@@ -1,0 +1,6 @@
+---
+domain: "{{ domain_name }}"
+apikey: "{{ api_key }}"
+email: "{{ email }}"
+lego_v: v4.14.0
+script_path: "/etc/letsencrypt/lego_ssl.sh"

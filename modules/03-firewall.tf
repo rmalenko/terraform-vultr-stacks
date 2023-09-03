@@ -39,6 +39,17 @@ resource "vultr_firewall_rule" "httpv4" {
   notes             = "Allow HTTP"
 }
 
+resource "vultr_firewall_rule" "lego_httpv4" {
+  # count             = var.firewall_name != "" ? 1 : 0
+  firewall_group_id = vultr_firewall_group.firewallgroups.id
+  protocol          = "tcp"
+  ip_type           = "v4"
+  subnet            = "0.0.0.0"
+  subnet_size       = 0
+  port              = "81-82"
+  notes             = "Allow HTTP for Lego to obtain SSL certificates from Letsencrypt"
+}
+
 # Add a firewall rule to the group allowing HTTP IPv6 access.
 resource "vultr_firewall_rule" "httpv6" {
   # count             = var.firewall_name != "" ? 1 : 0

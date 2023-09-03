@@ -42,8 +42,9 @@ resource "local_file" "ansible_inventory" {
   filename        = "./ansible/ansible_inventory.yaml"
   depends_on      = [data.vultr_instance.instance_ip]
 
+# 180 seconds of sleep may not be enough to get a letsencrypt certificate because DNS isn't propagated yet.
   provisioner "local-exec" {
-    command = "export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES && sleep 90 && cd ./ansible && ansible-playbook -i ./ansible_inventory.yaml ./${each.key}.yaml --limit '${each.key}.${var.domain}' --extra-vars {domain_name: [var.domain, www.${var.domain}, ${keys(var.instance)[0]}.${var.domain}]}"
+    command = "export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES && sleep 180 && cd ./ansible && ansible-playbook -i ./ansible_inventory.yaml ./${each.key}.yaml --limit '${each.key}.${var.domain}' --extra-vars \"{domain_name: [var.domain, www.${var.domain}, ${keys(var.instance)[0]}.${var.domain}]}\" domain_name_main=${var.domain}"
   }
 }
 

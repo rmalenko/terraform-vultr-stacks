@@ -198,6 +198,13 @@ variable "os_id_ubuntu_20_04_lts" {
   default     = "387"
 }
 
+variable "os_id_ubuntu_22_04_lts" {
+  description = "Ubuntu 22.04 LTS x64"
+  type        = string
+  default     = "1743"
+}
+
+
 # Plans
 # curl "https://api.vultr.com/v2/plans" -X GET -H "Authorization: Bearer IO...LQ"
 
