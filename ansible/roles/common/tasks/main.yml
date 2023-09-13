@@ -5,7 +5,7 @@
 
 - name: Update repositories cache and package
   ansible.builtin.apt:
-    cache_valid_time: 86400 #One day
+    cache_valid_time: 86400 # One day
     update_cache: true
     upgrade: true
     state: present
@@ -40,6 +40,8 @@
     - curl
     - software-properties-common
     - gnupg
+    - ziptool
+    - zstd
 
 - name: Create a directory for Midnight Commander menu
   ansible.builtin.file:

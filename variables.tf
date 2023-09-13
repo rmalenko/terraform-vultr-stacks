@@ -5,6 +5,21 @@ variable "VULTR_API_KEY" {
   type = string
 }
 
+variable "GITHUB_TOKEN" {
+  type        = string
+  description = "GitHub token"
+}
+
+variable "email_for_letsencrypt" {
+  type        = string
+  description = "Email for Letsencrypt certificates in tfvars"
+}
+
+variable "main_domain" {
+  type        = string
+  description = "Main domain"
+}
+
 variable "region_amsterdam_nl" {
   type    = string
   default = "ams"
@@ -204,7 +219,6 @@ variable "os_id_ubuntu_22_04_lts" {
   default     = "1743"
 }
 
-
 # Plans
 # curl "https://api.vultr.com/v2/plans" -X GET -H "Authorization: Bearer IO...LQ"
 
@@ -219,4 +233,3 @@ variable "plan_10_usd_vc2-1c-2gb" {
   type        = string
   default     = "387"
 }
-

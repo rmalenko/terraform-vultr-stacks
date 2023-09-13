@@ -4,6 +4,6 @@
 [submodule "ansible/roles/nginxinc.nginx"]
 	path = ansible/roles/nginxinc.nginx
 	url = https://github.com/nginxinc/ansible-role-nginx.git
-[submodule "ansible/roles/geerlingguy.postgresql"]
-	path = ansible/roles/geerlingguy.postgresql
+[submodule "ansible/roles/anxs.postgresql"]
+	path = ansible/roles/anxs.postgresql
 	url = git@github.com:ANXS/postgresql.git

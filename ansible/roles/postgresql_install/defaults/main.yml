@@ -1,0 +1,3 @@
+---
+postgresql_dbname_one: "gou8views"
+postgresql_address: "localhost"
