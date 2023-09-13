@@ -1,0 +1,4 @@
+VULTR_API_KEY         = "fill me"
+email_for_letsencrypt = "my@mail.com"
+main_domain           = "domain.com"
+GITHUB_TOKEN          = "ghp_"

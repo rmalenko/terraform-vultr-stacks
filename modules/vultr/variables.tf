@@ -10,10 +10,14 @@ variable "region" {
   type = string
 }
 
+variable "ssh_key_name" {
+  type        = list(string)
+  description = "SSH key name from Vultr"
+}
+
 variable "instance" {
   type = map(object({
     instance_tags    = list(any),
-    ssh_key_name     = list(string),
     plan             = string,
     os_id            = string,
     enable_ipv6      = bool,
@@ -25,7 +29,6 @@ variable "instance" {
     activation_email = bool,
     cloud_config     = string,
     tz               = string,
-    # ansible_playbook = string
   }))
 }
 
@@ -37,3 +40,22 @@ variable "domain" {
 variable "vultr_apikey" {
   type = string
 }
+
+variable "email_for_ssl" {
+  type        = string
+  description = "Email for Letsencrypt certificates in terraform"
+}
+
+variable "firewall" {
+  description = "List of firewall rules"
+
+  type = list(object({
+    ip_type     = string
+    protocol    = string
+    subnet      = string
+    subnet_size = string
+    port        = any
+    notes       = string
+  }))
+}
+

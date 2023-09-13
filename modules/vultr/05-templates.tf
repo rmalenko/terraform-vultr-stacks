@@ -11,7 +11,7 @@ data "vultr_instance" "instance_ip" {
 data "vultr_instance" "main_instance_ip" {
   filter {
     name   = "hostname"
-    values = [ "${keys(var.instance)[0]}.${var.domain}" ]
+    values = ["${keys(var.instance)[0]}.${var.domain}"]
   }
   depends_on = [vultr_instance.instanceses]
 }
@@ -24,11 +24,7 @@ locals {
       external_ip = v.main_ip
     }
   }
-}
-
-output "test" {
-  # value = keys(var.instance)[0]
-  value = data.vultr_instance.main_instance_ip.main_ip
+  main_instance_internal_ip = data.vultr_instance.main_instance_ip.internal_ip
 }
 
 resource "local_file" "ansible_inventory" {
@@ -42,9 +38,8 @@ resource "local_file" "ansible_inventory" {
   filename        = "./ansible/ansible_inventory.yaml"
   depends_on      = [data.vultr_instance.instance_ip]
 
-# 180 seconds of sleep may not be enough to get a letsencrypt certificate because DNS isn't propagated yet.
   provisioner "local-exec" {
-    command = "export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES && sleep 180 && cd ./ansible && ansible-playbook -i ./ansible_inventory.yaml ./${each.key}.yaml --limit '${each.key}.${var.domain}' --extra-vars \"{domain_name: [var.domain, www.${var.domain}, ${keys(var.instance)[0]}.${var.domain}]}\" domain_name_main=${var.domain}"
+    command = "export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES && sleep 90 && cd ./ansible && ansible-playbook -i ./ansible_inventory.yaml ./${each.key}.yaml --limit '${each.key}.${var.domain}' --extra-vars 'domain_name=jazzfest.link domain_name_nginx=${keys(var.instance)[0]}.${var.domain} api_key=${var.vultr_apikey} email=${var.email_for_ssl} firstinternal_ip=${local.main_instance_internal_ip}'"
   }
 }
 
@@ -53,14 +48,3 @@ resource "local_file" "ansible_inventory" {
 # or 
 # adding below to ~/.bash_profile works.
 # export DISABLE_SPRING=true
-
-
-
-# [
-#   "${var.domain}",
-#   "www.${var.domain}"
-# ]
-
-
-
-# domain_name=[jazzfest.link, www.jazzfest.link, app-server.jazzfest.link]

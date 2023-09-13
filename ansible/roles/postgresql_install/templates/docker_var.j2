@@ -1,0 +1,9 @@
+#!/bin/sh
+
+{{ ansible_managed | comment }}
+
+POSTGRES_USER={{ postgresql_usrname }}
+POSTGRES_PASSWORD={{ postgresql_passwd }}
+POSTGRES_DB={{ postgresql_dbname_one }}
+POSTGRES_ADDR={{ postgresql_address }}
+POSTGRES_DSN=postgresql://{{ postgresql_usrname }}:{{ postgresql_passwd }}@{{ postgresql_address }}:5432/{{ postgresql_dbname_one }}?sslmode=disable

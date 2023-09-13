@@ -1,0 +1,28 @@
+#cloud-config
+${yamlencode(
+  {
+    "package_update" = false,
+    "package_upgrade" = false,
+    "timezone" = timezone,
+    "runcmd" = [
+      "ufw disable"
+    ],
+    "groups" = [
+      "docker"
+    ],
+    "users" = [
+      "default",
+      {
+        "name" = "gituser",
+        "gecos" = "Github action user",
+        "groups" = "docker",
+        "shell" = "/bin/bash",
+        "lock_passwd" = true,
+        "ssh_pwauth" = false,
+        "ssh-authorized-keys" = [
+          public_key_ecdsa_git
+        ]
+      }
+    ]
+  }
+)}

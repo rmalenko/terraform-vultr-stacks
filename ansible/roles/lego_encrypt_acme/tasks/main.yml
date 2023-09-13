@@ -5,16 +5,15 @@
     body_format: json
     return_content: true
     remote_src: false
-  # delegate_to: localhost
   register: json_response
 
-- name: Debug json_response
-  debug:
-    msg: >-
-      {{
-        (json_response.json.assets | selectattr('browser_download_url', 'search', 'lego_' + (lego_v) + '_linux_amd64.tar.gz')
-        | list | first).browser_download_url
-      }}
+# - name: Debug json_response
+#   debug:
+#     msg: >-
+#       {{
+#         (json_response.json.assets | selectattr('browser_download_url', 'search', 'lego_' + (lego_v) + '_linux_amd64.tar.gz')
+#         | list | first).browser_download_url
+#       }}
 
 - name: "Install {{ json_response.json.tag_name }}"
   ansible.builtin.unarchive:
@@ -32,7 +31,7 @@
     state: directory
     owner: root
     group: root
-    mode: '0755'
+    mode: '0700'
   loop:
     - { src: /etc/letsencrypt/ }
 
@@ -44,12 +43,8 @@
     group: root
     mode: '0700'
 
-# - name: Issue a Letsencrypt certificate
-#   ansible.builtin.command: "${{ script_path }}"
-
 - name: Issue a Letsencrypt certificate
   ansible.builtin.command:
     argv:
       - "{{ script_path }}"
       - run
-

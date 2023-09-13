@@ -22,11 +22,9 @@ Important:
 - IP of the first server used for `@` and `www` DNS records.
 - SSL certificate (Letsencrypt) will be issued for wildcard domains: `jazzfest.link`, `*.jazzfest.link` using [Lego](https://github.com/go-acme/lego) - Let's Encrypt client and ACME library. Follow the link for more information. We assume we use Vultr DNS. And our NS servers were appropriately configured.
 
-### Ansible configuration
-- app-servr = app-server.yaml ansible playbooks name. So, each server uses its playbook, which allows for preparing specific configurations for each server. It means you must create a playbook named as `${each.key}.yaml` in the folder `./ansible`
+`sleep 90` in `05-templates.tf` may not be enough to get a letsencrypt certificate because DNS isn't propagated yet.
 
-
-`sleep 180` in `06-templates.tf` may not be enough to get a letsencrypt certificate because DNS isn't propagated yet.
+Define name, type, etc., for one server or many servers as you wish.
 
 ![Vultr](./docs/servers_key.png)
 
@@ -46,6 +44,10 @@ Save it in safe the file `terraform.tfstate` and don't expose its nowhere.
 
 This module doesn't support save the state file on S3 or somewhere and doesn't support save the lock file to. This will be implemented in future.
 
+### Ansible configuration
+
+- `app-servr = app-server.yaml` ansible playbooks name. So, each server uses its playbook, which allows for preparing specific configurations for each server. It means you must reate a playbook named as `${each.key}.yaml` in the folder `./ansible`
+
 **Ansible**
 
 - **role: common** will install some Linux useful console utilities and add bash aliasese to root account.
@@ -56,8 +58,13 @@ This module doesn't support save the state file on S3 or somewhere and doesn't s
 
 - **role: node_exporter** for collect Prometheus metrics
 
+# Github for personal uses
 
+The module creates a number of branches, sets one of them as the default branch, and makes several environments as you wish, and each of them can have many variables and secrets.
+
+
+![Github](./docs/git_var.png)
+
+# Vultr key and API token
 ![Vultr](./docs/vultr_key.png)  
 ![Vultr](./docs/vultr_api_key.png)  
-
-

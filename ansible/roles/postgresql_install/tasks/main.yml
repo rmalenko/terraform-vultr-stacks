@@ -1,0 +1,70 @@
+---
+- name: Create password for postgresql
+  ansible.builtin.set_fact:
+    postgresql_passwd: "{{ lookup('ansible.builtin.password', '/tmp/passwordfile', length=12, chars=['ascii_letters', 'digits']) }}"
+    postgresql_usrname: "{{ lookup('ansible.builtin.password', '/tmp/passwordfile_usr', length=10, chars=['ascii_lowercase']) }}"
+
+# - name: Display password
+#   debug:
+#     msg: "p: {{ postgresql_passwd }} u: {{ postgresql_usrname }}"
+
+- name: PSQL installation and configuration
+  ansible.builtin.include_role:
+    name: ANXS.postgresql
+  vars:
+    postgresql_version: 15
+    postgresql_encoding: "UTF-8"
+    postgresql_locale: "en_US.UTF-8"
+    postgresql_ctype: "en_US.UTF-8"
+    postgresql_admin_user: "postgres"
+    postgresql_default_auth_method: "peer"
+    postgresql_users:
+      - name: "{{ postgresql_usrname }}"
+        password: "{{ postgresql_passwd }}"
+        encrypted: true     # if password should be encrypted, postgresql >= 10 does only accepts encrypted passwords
+        state: "present"    # optional; one of 'present', 'absent'
+    postgresql_databases:
+      - name: "{{ postgresql_dbname_one }}"
+        owner: "{{ postgresql_usrname }}"   # optional; specify the owner of the database
+        hstore: true                        # flag to install the hstore extension on this database (yes/no)
+        uuid_ossp: true                     # flag to install the uuid-ossp extension on this database (yes/no)
+        citext: true                        # flag to install the citext extension on this database (yes/no)
+        encoding: "UTF-8"                   # override global {{ postgresql_encoding }} variable per database
+        state: "present"                    # optional; one of 'present', 'absent', 'dump', 'restore'
+        lc_collate: "en_US.UTF-8"           # override global {{ postgresql_locale }} variable per database
+        lc_ctype: "en_US.UTF-8"             # override global {{ postgresql_ctype }} variable per database
+    postgresql_user_privileges:
+      - name: "{{ postgresql_usrname }}"  # user name
+        db: "{{ postgresql_dbname_one }}" # database
+        priv: "ALL"                       # privilege string format: example: INSERT,UPDATE/table:SELECT/anothertable:ALL
+        role_attr_flags: "CREATEDB"       # role attribute flags
+    postgresql_pg_hba_custom:
+      - comment: "{{ postgresql_usrname }}, password access"
+        type: host
+        database: "{{ postgresql_dbname_one }}"
+        user: "{{ postgresql_usrname }}"
+        address: 172.0.0.0/8 # Default docker network addresses Number of Usable Hosts 16777214
+        method: trust
+    postgresql_listen_addresses:
+      - "{{ postgresql_address }}"
+    postgresql_port: 5432
+
+
+- name: Create the directory for the docker building
+  ansible.builtin.file:
+    path: '{{ item.src }}'
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+  loop:
+    - { src: /root/docker/ }
+
+- name: Template a file to .var
+  ansible.builtin.template:
+    src: docker_var.j2
+    dest: "/root/docker/.var"
+    owner: root
+    group: root
+    mode: '0600'
+
