@@ -1,0 +1,40 @@
+name: SSH test
+on:
+  push:
+    branches: [ production ]
+  pull_request:
+    types:
+      - opened
+    branches: [ production ]
+  
+jobs:
+  deploy: # single job called "deploy"
+    name: "Deploy to production"
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.event_name == 'push' && github.ref == 'refs/heads/production'
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY_DSA" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          cat >>~/.ssh/config <<END
+          Host production
+            HostName $HOSTNAME
+            User $SSH_USER
+            IdentityFile ~/.ssh/id_ed25519
+            StrictHostKeyChecking no
+          END
+          echo "variable hostname : $HOSTNAME"
+          echo "variable ssh user name : $SSH_USER"
+          echo "variable ssh key : $SSH_KEY_DSA"
+
+        env:
+          SSH_USER: ${{ vars.SSH_USER }}
+          SSH_KEY_DSA: ${{ secrets.SSH_KEY_DSA }}
+          SSH_KEY_RSA: ${{ secrets.SSH_KEY_RSA }}
+          HOSTNAME: ${{ vars.HOSTNAME }}
+
+      - name: List directories
+        run: ssh production 'ls -a'

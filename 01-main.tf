@@ -1,17 +1,18 @@
 # The instance is a map of the number of instances. Each key is the name of the server and subdomain.
 module "vultr" {
-  source        = "./modules/vultr"
-  domain        = var.main_domain
-  ssh_key_name  = ["rostyslav"]
-  vpc_name      = "A beautiful name of my VPC"
-  region        = var.region_frankfurt_de
-  vultr_apikey  = var.VULTR_API_KEY
-  email_for_ssl = var.email_for_letsencrypt
+  source               = "./modules/vultr"
+  domain               = var.main_domain
+  ssh_key_name         = ["rostyslav"]
+  ssh_user_name_gitact = "gituser" # A name to use as ssh login in Github actions
+  vpc_name             = "A beautiful name of my VPC"
+  region               = var.region_frankfurt_de
+  vultr_apikey         = var.VULTR_API_KEY
+  email_for_ssl        = var.email_for_letsencrypt
 
   # List of server configurations
   instance = {
     app-server = {
-      instance_tags    = ["go", "app"]
+      instance_tags    = ["production", "app"]
       plan             = var.plan_5_usd_vc2-1c-1gb
       os_id            = var.os_id_ubuntu_22_04_lts
       enable_ipv6      = true
@@ -151,47 +152,90 @@ module "vultr" {
 }
 
 module "github" {
-  depends_on     = [module.vultr]
-  source         = "./modules/github"
-  repo_name      = "testing"
-  git_username   = "rmalenko"
-  branches       = ["production", "development", "staging"]
-  default_branch = "production"
-  environment_git = {
-    production = {
+  depends_on           = [module.vultr]
+  source               = "./modules/github"
+  repo_name            = "testing"
+  username             = "rmalenko"
+  branches             = ["production", "development", "staging"]
+  default_branch       = "production"
+  description          = "The test terraform repository"
+  visibility           = "public"
+  auto_init            = true
+  has_issues           = true
+  has_discussions      = true
+  gitignore_template   = "Terraform"
+  license_template     = "apache-2.0"
+  vulnerability_alerts = true
+  environment_git = [
+    {
+      env_name      = "production"
+      env_var_name  = "HOSTNAME"
+      env_var_value = module.vultr.hostname_main_instance_app
+    },
+    {
+      env_name      = "production"
+      env_var_name  = "HOSTNAME_02"
+      env_var_value = module.vultr.hostname_main_instance_app
+    },
+    {
+      env_name      = "production"
+      env_var_name  = "SSH_USER"
+      env_var_value = module.vultr.gituser_ssh
+    },
+
+    {
+      env_name      = "staging"
+      env_var_name  = "HOSTNAME"
+      env_var_value = module.vultr.hostname_main_instance_app
+    },
+    {
+      env_name      = "staging"
+      env_var_name  = "SSH_USER"
+      env_var_value = module.vultr.gituser_ssh
+    },
+
+    {
+      env_name      = "development"
+      env_var_name  = "HOSTNAME"
+      env_var_value = module.vultr.hostname_main_instance_app
+    },
+    {
+      env_name      = "development"
+      env_var_name  = "SSH_USER"
+      env_var_value = module.vultr.gituser_ssh
+    },
+  ]
+
+  secrets_git = [
+    {
       env_name               = "production"
-      env_var_name           = "hostname"
-      env_var_value          = module.vultr.hostname_main_instance_app
-      secret_name            = "ssh_key_rsa"
-      secret_value_plaintext = "%s"
+      secret_name            = "SSH_KEY_DSA"
+      secret_value_plaintext = module.vultr.private_key_ecdsa
+      secret_value_encrypted = base64encode(module.vultr.private_key_ecdsa)
+    },
+    {
+      env_name               = "production"
+      secret_name            = "SSH_KEY_RSA"
+      secret_value_plaintext = module.vultr.private_key_rsa
       secret_value_encrypted = base64encode(module.vultr.private_key_rsa)
     },
-    production_02 = {
-      env_name               = "production"
-      env_var_name           = "hostname_02"
-      env_var_value          = module.vultr.hostname_main_instance_app
-      secret_name            = "ssh_key_dsa"
-      secret_value_plaintext = "%s"
-      secret_value_encrypted = base64encode(module.vultr.private_key_ecdsa)
-    }
-    staging = {
+
+    {
       env_name               = "staging"
-      env_var_name           = "hostname"
-      env_var_value          = module.vultr.hostname_main_instance_app
-      secret_name            = "ssh_key_rsa"
-      secret_value_plaintext = "%s"
+      secret_name            = "SSH_KEY_RSA"
+      secret_value_plaintext = module.vultr.private_key_rsa
       secret_value_encrypted = base64encode(module.vultr.private_key_rsa)
-    }
-    development = {
+    },
+
+    {
       env_name               = "development"
-      env_var_name           = "hostname"
-      env_var_value          = module.vultr.hostname_main_instance_app
-      secret_name            = "ssh_key_rsa"
-      secret_value_plaintext = "%s"
+      secret_name            = "SSH_KEY_RSA"
+      secret_value_plaintext = module.vultr.private_key_rsa
       secret_value_encrypted = base64encode(module.vultr.private_key_rsa)
-    }
-  }
+    },
+  ]
 }
+
 
 # Man. DateTime::TimeZone::Catalog.3pm.gz
 # https://manpages.ubuntu.com/manpages/focal/man3/DateTime::TimeZone::Catalog.3pm.html¸

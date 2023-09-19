@@ -38,3 +38,8 @@ output "public_key_ecdsa" {
   value = trimspace(tls_private_key.ED25519.public_key_openssh)
   # sensitive = true
 }
+
+output "gituser_ssh" {
+  value       = var.ssh_user_name_gitact
+  description = "Defauld user for SSH from Github"
+}

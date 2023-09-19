@@ -59,3 +59,7 @@ variable "firewall" {
   }))
 }
 
+variable "ssh_user_name_gitact" {
+  type        = string
+  description = "A name to use as ssh login in Github actions"
+}
