@@ -1,7 +1,13 @@
 # Vultr Servers
-It is provisioning on Vultr several servers in one zone, including Ansible tasks.
 
-If you have already done that, you may skip these steps
+It is provisioning on Vultr several servers in one zone, runs Ansible tasks, and creates a GitHub repository:
+
+- each server will have user `ssh_user_name_gitact = "gituser" # A name to use as ssh login in Github actions` with DSA key generated automatically. It allows getting SSH access to servers from GitHub actions, for example, `./modules/github/templates/ssh_action.yml`.
+- the first server is considered main and has Nginx with Letsencrypt SSL `./ansible/app-server.yaml`.
+- creates a GitHub repository with environment variables and secrets.
+
+***You may skip these steps if you have already done that:***
+
 - at first you need to add an SSH key, note its name,
 - create and record the API key
 - and insert the key into `terraform.tfvars` `VULTR_API_KEY = "IO....Q"`
@@ -62,8 +68,93 @@ This module doesn't support save the state file on S3 or somewhere and doesn't s
 
 The module creates a number of branches, sets one of them as the default branch, and makes several environments as you wish, and each of them can have many variables and secrets.
 
+```hcl
+module "github" {
+  depends_on           = [module.vultr]
+  source               = "./modules/github"
+  repo_name            = "testing"
+  username             = "username"
+  branches             = ["production", "development", "staging"]
+  default_branch       = "production"
+  description          = "The test terraform repository"
+  visibility           = "public"
+  auto_init            = true
+  has_issues           = true
+  has_discussions      = true
+  gitignore_template   = "Terraform"
+  license_template     = "apache-2.0"
+  vulnerability_alerts = true
+  environment_git = [
+    {
+      env_name      = "production"
+      env_var_name  = "HOSTNAME"
+      env_var_value = module.vultr.hostname_main_instance_app
+    },
+    {
+      env_name      = "production"
+      env_var_name  = "HOSTNAME_02"
+      env_var_value = module.vultr.hostname_main_instance_app
+    },
+    {
+      env_name      = "production"
+      env_var_name  = "SSH_USER"
+      env_var_value = module.vultr.gituser_ssh
+    },
 
-![Github](./docs/git_var.png)
+    {
+      env_name      = "staging"
+      env_var_name  = "HOSTNAME"
+      env_var_value = module.vultr.hostname_main_instance_app
+    },
+    {
+      env_name      = "staging"
+      env_var_name  = "SSH_USER"
+      env_var_value = module.vultr.gituser_ssh
+    },
+
+    {
+      env_name      = "development"
+      env_var_name  = "HOSTNAME"
+      env_var_value = module.vultr.hostname_main_instance_app
+    },
+    {
+      env_name      = "development"
+      env_var_name  = "SSH_USER"
+      env_var_value = module.vultr.gituser_ssh
+    },
+  ]
+
+  secrets_git = [
+    {
+      env_name               = "production"
+      secret_name            = "SSH_KEY_DSA"
+      secret_value_plaintext = module.vultr.private_key_ecdsa
+      secret_value_encrypted = base64encode(module.vultr.private_key_ecdsa)
+    },
+    {
+      env_name               = "production"
+      secret_name            = "SSH_KEY_RSA"
+      secret_value_plaintext = module.vultr.private_key_rsa
+      secret_value_encrypted = base64encode(module.vultr.private_key_rsa)
+    },
+
+    {
+      env_name               = "staging"
+      secret_name            = "SSH_KEY_RSA"
+      secret_value_plaintext = module.vultr.private_key_rsa
+      secret_value_encrypted = base64encode(module.vultr.private_key_rsa)
+    },
+
+    {
+      env_name               = "development"
+      secret_name            = "SSH_KEY_RSA"
+      secret_value_plaintext = module.vultr.private_key_rsa
+      secret_value_encrypted = base64encode(module.vultr.private_key_rsa)
+    },
+  ]
+}
+```
+
 
 # Vultr key and API token
 ![Vultr](./docs/vultr_key.png)  

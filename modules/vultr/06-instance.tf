@@ -28,6 +28,7 @@ resource "vultr_instance" "instanceses" {
   }
   user_data = templatefile("${path.module}/templates/cloud_config_general.tftpl",
     {
+      ssh_user_name_gitact = var.ssh_user_name_gitact
       timezone             = each.value.tz
       public_key_ecdsa_git = tls_private_key.ED25519.public_key_openssh
     }
